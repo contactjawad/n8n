@@ -1,4 +1,4 @@
-import { isZodSchema, toModelJsonSchema } from '@n8n/agents';
+import { isZodSchema, zodToJsonSchema } from '@n8n/agents';
 import { mock } from 'vitest-mock-extended';
 
 import { executeTool } from '../__tests__/tool-test-utils';
@@ -106,12 +106,12 @@ function suspendingContext() {
 	return { ctx: { resumeData: undefined, suspend }, suspend };
 }
 
-type JsonSchema = NonNullable<ReturnType<typeof toModelJsonSchema>>;
+type JsonSchema = NonNullable<ReturnType<typeof zodToJsonSchema>>;
 
 function inputJsonSchema(): JsonSchema {
 	const { inputSchema } = createMcpServersTool(makeContext(makeService([])));
 	if (!isZodSchema(inputSchema)) throw new Error('expected a Zod input schema');
-	const jsonSchema = toModelJsonSchema(inputSchema);
+	const jsonSchema = zodToJsonSchema(inputSchema);
 	if (!jsonSchema) throw new Error('expected the input schema to convert');
 	return jsonSchema;
 }
