@@ -1,4 +1,4 @@
-import type { StreamChunk } from '@n8n/agents';
+import { APPROVAL_SUSPEND_SCHEMA, type StreamChunk } from '@n8n/agents';
 import {
 	credentialRequestSchema,
 	workflowSetupNodeSchema,
@@ -349,6 +349,18 @@ function mapSuspendedChunk(
 		suspendPayload.mcpConnectRequest,
 		mcpConnectRequestSchema,
 	);
+	const targetApprovalResult = isRecord(suspendPayload.builderCheckpoint)
+		? APPROVAL_SUSPEND_SCHEMA.safeParse(suspendPayload)
+		: undefined;
+	const targetApproval = targetApprovalResult?.success
+		? {
+				toolName: targetApprovalResult.data.toolName,
+				...(targetApprovalResult.data.displayName
+					? { displayName: targetApprovalResult.data.displayName }
+					: {}),
+				args: targetApprovalResult.data.args,
+			}
+		: undefined;
 
 	return {
 		type: 'confirmation-request',
@@ -363,6 +375,7 @@ function mapSuspendedChunk(
 				typeof suspendPayload.message === 'string'
 					? suspendPayload.message
 					: 'Confirmation required',
+			...(targetApproval ? { targetApproval } : {}),
 			...(credentialRequests ? { credentialRequests } : {}),
 			...(projectId ? { projectId } : {}),
 			...(inputType ? { inputType } : {}),
